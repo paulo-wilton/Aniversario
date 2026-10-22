@@ -21,6 +21,8 @@ function resize() {
     canvas.height = window.innerHeight;
     calc.totalWidth = canvas.width;
     calc.totalHeight = canvas.height;
+    opts.charSize = window.innerWidth <= 600 ? 35 : 70;
+    opts.gap = window.innerWidth <= 600 ? 5 : 15;
     ctx.font = opts.charSize + 'px sans-serif';
     setupLetters();
 }
@@ -83,7 +85,7 @@ function SideFirework() {
     this.x = naEsquerda ? Math.random() * (calc.totalWidth * 0.2) : calc.totalWidth * 0.8 + Math.random() * (calc.totalWidth * 0.2);
     
     this.y = calc.totalHeight;
-    this.targetY = Math.random() * (calc.totalHeight * 0.6) + (calc.totalHeight * 0.1); // Altura aleatória
+    this.targetY = Math.random() * (calc.totalHeight * 0.6) + (calc.totalHeight * 0.1); 
     this.hue = Math.random() * 360;
     this.color = `hsl(${this.hue}, 100%, 60%)`;
     this.speed = Math.random() * 4 + 4;
@@ -192,7 +194,6 @@ letters.forEach((letter) => {
 window.addEventListener('resize', resize);
 resize();
 anim();
-
 const audio = document.querySelector('audio');
 
 document.addEventListener('click', function() {
