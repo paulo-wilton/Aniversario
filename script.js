@@ -40,6 +40,36 @@ function resize() {
     setupLetters();
 }
 
+/* ---------- Funções auxiliares de medida (responsividade) ---------- */
+
+// Largura de um texto desenhado letra a letra com espaçamento "gap"
+function textWidth(str, size, gap) {
+    ctx.font = size + 'px sans-serif';
+    let w = 0;
+    for (let i = 0; i < str.length; i++) {
+        w += ctx.measureText(str[i]).width + gap;
+    }
+    return str.length ? w - gap : 0;
+}
+
+// Quebra uma frase em várias linhas para caber na largura máxima
+function wrapLine(line, size, gap, maxW) {
+    const words = line.split(' ');
+    const lines = [];
+    let cur = '';
+    words.forEach(w => {
+        const test = cur ? cur + ' ' + w : w;
+        if (cur && textWidth(test, size, gap) > maxW) {
+            lines.push(cur);
+            cur = w;
+        } else {
+            cur = test;
+        }
+    });
+    if (cur) lines.push(cur);
+    return lines;
+}
+
 function Letter (char, x, y, size) {
     this.char = char;
     this.x = x;
@@ -157,36 +187,64 @@ function getHeartPoint(t) {
 function setupLetters() {
     letters = [];
     
+    const isMobile = window.innerWidth <= 600;
+    const maxW = calc.totalWidth * (isMobile ? 0.94 : 0.92);
+
+    // Topo do bloco de mensagem em HTML (o coração não pode passar daqui)
+    const msgEl = document.querySelector('.mensagem-container');
+    const msgTop = msgEl ? msgEl.getBoundingClientRect().top : calc.totalHeight;
     
     const wordsArray = opts.words.split(' ');
-    let currentY = calc.totalHeight * 0.15; 
+    let currentY = calc.totalHeight * (isMobile ? 0.08 : 0.15); 
 
-    ctx.font = opts.charSize + 'px sans-serif';
+    // Tamanho do título: reduz apenas se não couber na largura da tela
+    let titleSize = opts.charSize;
+    let titleGap = opts.gap;
+    const widestWord = () => Math.max(...wordsArray.map(w => textWidth(w, titleSize, titleGap)));
+    while (titleSize > 16 && widestWord() > maxW) {
+        titleSize -= 1;
+        titleGap = opts.gap * (titleSize / opts.charSize);
+    }
+
+    ctx.font = titleSize + 'px sans-serif';
 
     wordsArray.forEach((word) => {
         let wordWidth = 0;
         for (let i = 0; i < word.length; i++) {
-            wordWidth += ctx.measureText(word[i]).width + opts.gap;
+            wordWidth += ctx.measureText(word[i]).width + titleGap;
         }
-        wordWidth -= opts.gap;
+        wordWidth -= titleGap;
         let startX = (calc.totalWidth - wordWidth) / 2;
 
         for (let i = 0; i < word.length; i++) {
             const char = word[i];
-            letters.push(new Letter(char, startX + ctx.measureText(char).width / 2, currentY, opts.charSize));
-            startX += ctx.measureText(char).width + opts.gap;
+            letters.push(new Letter(char, startX + ctx.measureText(char).width / 2, currentY, titleSize));
+            startX += ctx.measureText(char).width + titleGap;
         }
-        currentY += opts.charSize + 20;
+        currentY += titleSize + (isMobile ? 12 : 20);
     });
 
     
-    const subCharSize = window.innerWidth <= 600 ? 14 : 20; 
-    const subGap = window.innerWidth <= 600 ? 2 : 4;       
-    ctx.font = subCharSize + 'px sans-serif';
+    let subCharSize = isMobile ? 14 : 20; 
+    let subGap = isMobile ? 2 : 4;
+    const lineStep = (size) => size + (isMobile ? 10 : 15);
+    const minHeartSpace = isMobile ? 80 : 120;
+    const subStartY = currentY + (isMobile ? 10 : 20);
 
-    currentY += 20; 
+    // Quebra as frases em linhas que cabem na tela; reduz a fonte só se faltar espaço
+    let wrapped;
+    while (true) {
+        subGap = isMobile ? Math.max(1, Math.round(subCharSize / 7)) : 4;
+        wrapped = [];
+        opts.subLines.forEach(l => wrapped.push(...wrapLine(l, subCharSize, subGap, maxW)));
+        const endY = subStartY + wrapped.length * lineStep(subCharSize);
+        if (msgTop - endY >= minHeartSpace || subCharSize <= 10) break;
+        subCharSize -= 1;
+    }
 
-    opts.subLines.forEach((line) => {
+    currentY = subStartY;
+
+    wrapped.forEach((line) => {
         ctx.font = subCharSize + 'px sans-serif';
         let lineWidth = 0;
         for (let i = 0; i < line.length; i++) {
@@ -205,13 +263,32 @@ function setupLetters() {
             letters.push(new Letter(char, startX + ctx.measureText(char).width / 2, currentY, subCharSize));
             startX += ctx.measureText(char).width + subGap;
         }
-        currentY += subCharSize + 15; 
+        currentY += lineStep(subCharSize); 
     });
 
     
     heartParticles = [];
-    const baseHeartY = currentY + (window.innerWidth <= 600 ? 50 : 80);
-    const baseScale = window.innerWidth <= 600 ? 3.5 : 6;
+    let baseScale = isMobile ? 3.5 : 6;
+    let baseHeartY = currentY + (isMobile ? 50 : 80);
+
+    // Extensão vertical do coração (já considerando a pulsação de 1.15x)
+    const TOP = 10.1 * 1.15;
+    const BOTTOM = 17 * 1.15;
+    const fitsOriginal = (baseHeartY - TOP * baseScale >= currentY - 10) &&
+                         (baseHeartY + BOTTOM * baseScale <= msgTop - 5);
+
+    if (!fitsOriginal) {
+        // Ajusta tamanho e posição do coração para ficar entre o texto e a mensagem
+        const areaTop = currentY - 5;
+        const areaBottom = msgTop - 8;
+        const avail = Math.max(areaBottom - areaTop, 40);
+        baseScale = Math.max(1.5, Math.min(baseScale, avail / (TOP + BOTTOM)));
+        baseHeartY = areaTop + (avail - (TOP + BOTTOM) * baseScale) / 2 + TOP * baseScale;
+    }
+
+    // Garante que o coração nunca ultrapasse as laterais
+    const maxHalfWidth = (calc.totalWidth / 2 - 8) / (16 * 1.15);
+    baseScale = Math.min(baseScale, maxHalfWidth);
 
     for (let i = 0; i < heartPointsCount; i++) {
         let t = (i / heartPointsCount) * Math.PI * 2;
@@ -298,6 +375,7 @@ function anim() {
 }
 
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 resize();
 anim();
 
