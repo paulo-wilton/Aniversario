@@ -6,7 +6,7 @@
     <title>Feliz Aniversário</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="intro-active">
 
    <audio src="audio/DJSnake-LetMeLoveYouftJustinBieber.mp3" loop playsinline></audio>
 
@@ -16,6 +16,56 @@
     <div class="mensagem-container">
         <h1>Feliz Aniversário!</h1>
         <p>Que o teu dia seja incrível. Fiz esta coisa incrível para ti. Merece muito, Vou sempre torcer por ti! Hahaha, 20 anos!</p>
+    </div>
+
+    
+    <div id="intro">
+        <div class="halo"></div>
+
+        <div class="intro-stage" role="button" tabindex="0" aria-label="Toque para abrir">
+            <div class="heart-beat">
+                <div class="core"></div>
+                <div class="ring"></div>
+
+                <div class="half-wrap left">
+                    <div class="half">
+                        <svg viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <defs>
+                                <linearGradient id="gradL" gradientUnits="userSpaceOnUse" x1="50" y1="0" x2="50" y2="90">
+                                    <stop offset="0" stop-color="#ff7cc0"/>
+                                    <stop offset="0.55" stop-color="#ff2d95"/>
+                                    <stop offset="1" stop-color="#d4146f"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 86 C22 62 4 46 4 28 C4 14 15 5 27 5 C37 5 45 10 50 19 C55 10 63 5 73 5 C85 5 96 14 96 28 C96 46 78 62 50 86 Z"
+                                  fill="url(#gradL)" stroke="#ffd9ee" stroke-width="1.6" stroke-linejoin="round"/>
+                            <path d="M15 25 C16 17 21 12 28 11" fill="none" stroke="#ffffff" stroke-opacity="0.7" stroke-width="2.2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="half-wrap right">
+                    <div class="half">
+                        <svg viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <defs>
+                                <linearGradient id="gradR" gradientUnits="userSpaceOnUse" x1="50" y1="0" x2="50" y2="90">
+                                    <stop offset="0" stop-color="#ff7cc0"/>
+                                    <stop offset="0.55" stop-color="#ff2d95"/>
+                                    <stop offset="1" stop-color="#d4146f"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 86 C22 62 4 46 4 28 C4 14 15 5 27 5 C37 5 45 10 50 19 C55 10 63 5 73 5 C85 5 96 14 96 28 C96 46 78 62 50 86 Z"
+                                  fill="url(#gradR)" stroke="#ffd9ee" stroke-width="1.6" stroke-linejoin="round"/>
+                            <path d="M85 25 C84 17 79 12 72 11" fill="none" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2.2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hint">Toque para abrir</div>
+
+        <canvas id="intro-canvas"></canvas>
     </div>
 
     <script src="script.js"></script>
